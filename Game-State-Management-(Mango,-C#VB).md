@@ -21,6 +21,18 @@ The sample also includes functionality for handling tombstoning and fast app swi
 
 > All content and source code downloaded from this page are bound to the Microsoft Permissive License (Ms-PL).
 
+## Screenshots
+
+|![Menu](https://github.com/SimonDarksideJ/GameStateManagementSample/raw/3.8/Assets/01-MainMenu.png)|![Options](https://github.com/SimonDarksideJ/GameStateManagementSample/raw/3.8/Assets/02-Options.png)|
+|-|-|
+|![GamePlay](https://github.com/SimonDarksideJ/GameStateManagementSample/raw/3.8/Assets/03-GamePlay.png)|![Pause Screen](https://github.com/SimonDarksideJ/GameStateManagementSample/raw/3.8/Assets/04-Paused.png)|
+
+## MonoGame sample
+
+- https://github.com/SimonDarksideJ/GameStateManagementSample
+
+## XNA downloads
+
 Download | Size | Description
 ---|---|---|
 [GSMSample_4_0_Mango](https://github.com/simondarksidej/XNAGameStudio/tree/archive/Samples/GSMSample_4_0_Mango) | 0.16MB | Source code and assets for the Game State Management Sample (XNA Game Studio 4.0 Refresh - Mango).
