@@ -2,7 +2,10 @@
 
 Welcome to this 3rd installment of my Tutorials on XNA. Because this Series will cover a lot of ground, I would like to take a jumpstart by starting from the code presented below. As you can see on the screenshot below, it will only draw a simple triangle. There is nothing in this code that hasn’t been covered yet in the previous 2 series.
 
-At this moment, my standard effects.fx file is loaded so we are able to render the triangle, but soon my effect file will be replaced by one of your own.
+> [!NOTE]
+> ### Find the assets for this [series located here](https://github.com/SimonDarksideJ/XNAGameStudio/raw/refs/heads/archive/Samples/Riemers/3D%20Series%203%20-%20HLSL%20Intro.zip)
+
+At this moment, my standard `effects.fx` file is loaded so we are able to render the triangle, but soon my effect file will be replaced by one of your own.
 
 > Use the Effects file provided and add it to your Content Project as normal.
 
