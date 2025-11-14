@@ -2,6 +2,9 @@
 
 Welcome to this 4th instalment of my XNA Tutorials for C#. In the first series, we’ve seen how to create a terrain. This Series we’ll go over that again – only this time using a totally different approach. Since we’ve learned (a bit beyond) the basics of HLSL in Series 3, let’s put that knowledge to good use.
 
+> [!NOTE]
+> ### Find the assets for this [series located here](https://github.com/SimonDarksideJ/XNAGameStudio/raw/refs/heads/archive/Samples/Riemers/3D%20Series%204%20-%20Advanced%20Terrain.zip)
+
 How excellent your latest idea for a new game might be, you’ll hardly impress anyone if you can only move some self-drawn crosses or dots over a 2D board. In this Series, we’ll be creating a terrain that you can use immediately as a start for your game. As this series relies heavily on HLSL, you will like to go through Series 3 before you start reading on this one.
 
 Because a terrain looks a lot nicer fullscreen that it does in a window, you can have a look at this fullscreenshot or at this one. And yes, the water moves and the clouds change shape ;)
