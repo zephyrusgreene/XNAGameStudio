@@ -20,7 +20,7 @@ Whow that’s easy!
 
 I’m glad you think so. There’s one difficult point in the story: the high resolution image is based on only 5x5 values, but all pixels of the image are linear interpolation between these values. But that’s entirely no problem, as the texture interpolator on our graphics card will do this job automatically for us! Also, instead of using 6 different maps, we’re going to use the same map 6 times, with differently scaled texture coordinates.
 
-So in our XNA code, we will start by coding a small method that generates a low-resolution static map:
+So in our CSharp code, we will start by coding a small method that generates a low-resolution static map:
 
 ```csharp
  private Texture2D CreateStaticMap(int resolution)
@@ -31,7 +31,7 @@ So in our XNA code, we will start by coding a small method that generates a low-
      for (int y = 0; y < resolution; y++)
      noisyColors[x + y * resolution] = new Color(new Vector3((float)rand.Next(1000) / 1000.0f, 0, 0));
 
-     Texture2D noiseImage = new Texture2D(device, resolution, resolution, 1, TextureUsage.None, SurfaceFormat.Color);
+     Texture2D noiseImage = new Texture2D(device, resolution, resolution);
      noiseImage.SetData(noisyColors);
      return noiseImage;
  }
@@ -55,13 +55,12 @@ Since we are going to render the noise map as a HLSL effect, we’ll need 2 tria
  }
 ```
 
-We will need a separate render target to render this into, so add these variables to the top of our XNA code:
+We will need a separate render target to render this into, so add these variables to the top of our CSharp code:
 
 ```csharp
  RenderTarget2D cloudsRenderTarget;
  Texture2D cloudStaticMap;
  VertexPositionTexture[] fullScreenVertices;
- VertexDeclaration fullScreenVertexDeclaration;
 ```
 
 We will use the cloudStaticMap to hold our basic static map. Initiliaze the render target in our LoadContent method:
@@ -82,7 +81,6 @@ Finally, load the fullscreen vertices and their VertexDeclaration in the LoadVer
 
 ```csharp
  fullScreenVertices = SetUpFullscreenVertices();
- fullScreenVertexDeclaration = new VertexDeclaration(device, VertexPositionTexture.VertexElements);
 ```
 
 With all of the initialization stuff done, we’re ready to move over to the HLSL code! There’s absolutely nothing fancy about the effect, the vertex shader simply needs to pass the texture coordinates to the pixel shader. So add this code to the end of our Series4Effects.fx file:
@@ -163,7 +161,7 @@ return Output;
 
 Since the perlin value is between 0 and 1, you can sharpen up the image by taking it to a power larger than 1. The larger the xOvercast value will be, the smaller and sharper your perlin clouds will be, but since you subtract this value from 1.0f, you get the inverse: the larger the xOvercast value, the more clouds you will have.
 
-Let’s not forget to add this xOvercast XNA-to-HLSL variable to the top of our effect:
+Let’s not forget to add this xOvercast CSharp-to-HLSL variable to the top of our effect:
 
 ```csharp
 float xOvercast;
@@ -182,32 +180,28 @@ technique PerlinNoise
 }
 ```
 
-That’s it for our HLSL code! Let’s move to our XNA file, where we still need to code a simple method that actually runs this effect:
+That’s it for our HLSL code! Let’s move to our CSharp file, where we still need to code a simple method that actually runs this effect:
 
 ```csharp
  private void GeneratePerlinNoise(float time)
  {
-     device.SetRenderTarget(0, cloudsRenderTarget);
+     device.SetRenderTarget(cloudsRenderTarget);
      device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1.0f, 0);
 
      effect.CurrentTechnique = effect.Techniques["PerlinNoise"];
      effect.Parameters["xTexture"].SetValue(cloudStaticMap);
      effect.Parameters["xOvercast"].SetValue(1.1f);
      effect.Parameters["xTime"].SetValue(time/1000.0f);
-     effect.Begin();
+
      foreach (EffectPass pass in effect.CurrentTechnique.Passes)
      {
-         pass.Begin();
-
+         pass.Apply();
          device.VertexDeclaration = fullScreenVertexDeclaration;
          device.DrawUserPrimitives(PrimitiveType.TriangleStrip, fullScreenVertices, 0, 2);
-
-         pass.End();
      }
-     effect.End();
 
-     device.SetRenderTarget(0, null);
-     cloudMap = cloudsRenderTarget.GetTexture();
+     device.SetRenderTarget(null);
+     cloudMap = cloudsRenderTarget;
  }
 ```
 
@@ -229,7 +223,7 @@ The next and final chapter of this series will use the on-the-fly generated nois
 
 ## The code so far
 
-Our XNA code:
+Our CSharp code:
 
 ```csharp
  using System;
@@ -313,7 +307,6 @@ Our XNA code:
          RenderTarget2D cloudsRenderTarget;
          Texture2D cloudStaticMap;
          VertexPositionTexture[] fullScreenVertices;
-         VertexDeclaration fullScreenVertexDeclaration;
  
          Vector3 windDirection = new Vector3(0, 0, 1);
  
@@ -339,20 +332,19 @@ Our XNA code:
              device = GraphicsDevice;
  
 
-            effect = Content.Load<Effect> ("Series4Effects");
-            bbEffect = Content.Load<Effect> ("bbEffect");            UpdateViewMatrix();
-            projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, device.Viewport.AspectRatio, 0.3f, 1000.0f);
+             effect = Content.Load<Effect> ("Series4Effects");
+             bbEffect = Content.Load<Effect> ("bbEffect");            UpdateViewMatrix();
+             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, device.Viewport.AspectRatio, 0.3f, 1000.0f);
 
-            Mouse.SetPosition(device.Viewport.Width / 2, device.Viewport.Height / 2);
-            originalMouseState = Mouse.GetState();
+             Mouse.SetPosition(device.Viewport.Width / 2, device.Viewport.Height / 2);
+             originalMouseState = Mouse.GetState();
 
 
-            skyDome = Content.Load<Model> ("dome"); skyDome.Meshes[0].MeshParts[0].Effect = effect.Clone(device);
-            PresentationParameters pp = device.PresentationParameters;
-            refractionRenderTarget = new RenderTarget2D(device, pp.BackBufferWidth, pp.BackBufferHeight, 1, device.DisplayMode.Format);
-            reflectionRenderTarget = new RenderTarget2D(device, pp.BackBufferWidth, pp.BackBufferHeight, 1, device.DisplayMode.Format);
-
-             cloudsRenderTarget = new RenderTarget2D(device, pp.BackBufferWidth, pp.BackBufferHeight, 1, device.DisplayMode.Format);
+             skyDome = Content.Load<Model> ("dome"); skyDome.Meshes[0].MeshParts[0].Effect = effect.Clone(device);
+             PresentationParameters pp = device.PresentationParameters;
+             refractionRenderTarget = new RenderTarget2D(device, pp.BackBufferWidth, pp.BackBufferHeight);
+             reflectionRenderTarget = new RenderTarget2D(device, pp.BackBufferWidth, pp.BackBufferHeight);
+             cloudsRenderTarget = new RenderTarget2D(device, pp.BackBufferWidth, pp.BackBufferHeight);
  
              LoadVertices();
              LoadTextures();
@@ -361,7 +353,8 @@ Our XNA code:
          private void LoadVertices()
          {
 
-            Texture2D heightMap = Content.Load<Texture2D> ("heightmap"); LoadHeightData(heightMap);
+            Texture2D heightMap = Content.Load<Texture2D> ("heightmap"); 
+            LoadHeightData(heightMap);
             VertexMultitextured[] terrainVertices = SetUpTerrainVertices();
             int[] terrainIndices = SetUpTerrainIndices();
             terrainVertices = CalculateNormals(terrainVertices, terrainIndices);
@@ -373,11 +366,10 @@ Our XNA code:
 
 
             Texture2D treeMap = Content.Load<Texture2D> ("treeMap");
-            List<Vector3> treeList = GenerateTreePositions(treeMap, terrainVertices);            CreateBillboardVerticesFromList(treeList);
-
- 
-             fullScreenVertices = SetUpFullscreenVertices();
-             fullScreenVertexDeclaration = new VertexDeclaration(device, VertexPositionTexture.VertexElements);
+            List<Vector3> treeList = GenerateTreePositions(treeMap, terrainVertices);            
+            CreateBillboardVerticesFromList(treeList);
+			
+            fullScreenVertices = SetUpFullscreenVertices();
          }
  
          private void LoadTextures()
@@ -391,7 +383,7 @@ Our XNA code:
             waterBumpMap = Content.Load<Texture2D> ("waterbump");
             treeTexture = Content.Load<Texture2D> ("tree");
             treeMap = Content.Load<Texture2D> ("treeMap");
-             cloudStaticMap = CreateStaticMap(32);
+            cloudStaticMap = CreateStaticMap(32);
          }
  
          private void LoadHeightData(Texture2D heightMap)
@@ -611,7 +603,7 @@ Our XNA code:
                  for (int y = 0; y < resolution; y++)
                      noisyColors[x + y * resolution] = new Color(new Vector3((float)rand.Next(1000) / 1000.0f, 0, 0));
  
-             Texture2D noiseImage = new Texture2D(device, resolution, resolution, 1, TextureUsage.None, SurfaceFormat.Color);
+             Texture2D noiseImage = new Texture2D(device, resolution, resolution);
              noiseImage.SetData(noisyColors);
              return noiseImage;
          }
@@ -909,31 +901,27 @@ Our XNA code:
  
              bbEffect.End();
          }
- 
-         private void GeneratePerlinNoise(float time)
-         {
-             device.SetRenderTarget(0, cloudsRenderTarget);
-             device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1.0f, 0);
-                         
-             effect.CurrentTechnique = effect.Techniques["PerlinNoise"];
-             effect.Parameters["xTexture"].SetValue(cloudStaticMap);
-             effect.Parameters["xOvercast"].SetValue(1.1f);
-             effect.Parameters["xTime"].SetValue(time/1000.0f);
-             effect.Begin();
-             foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-             {
-                 pass.Begin();
- 
-                 device.VertexDeclaration = fullScreenVertexDeclaration;
-                 device.DrawUserPrimitives(PrimitiveType.TriangleStrip, fullScreenVertices, 0, 2);
- 
-                 pass.End();
-             }
-             effect.End();
- 
-             device.SetRenderTarget(0, null);
-             cloudMap = cloudsRenderTarget.GetTexture();
-         }
+		 
+		 private void GeneratePerlinNoise(float time)
+		 {
+			 device.SetRenderTarget(cloudsRenderTarget);
+			 device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1.0f, 0);
+
+			 effect.CurrentTechnique = effect.Techniques["PerlinNoise"];
+			 effect.Parameters["xTexture"].SetValue(cloudStaticMap);
+			 effect.Parameters["xOvercast"].SetValue(1.1f);
+			 effect.Parameters["xTime"].SetValue(time/1000.0f);
+
+			 foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+			 {
+				 pass.Apply();
+				 device.VertexDeclaration = fullScreenVertexDeclaration;
+				 device.DrawUserPrimitives(PrimitiveType.TriangleStrip, fullScreenVertices, 0, 2);
+			 }
+
+			 device.SetRenderTarget(null);
+			 cloudMap = cloudsRenderTarget;
+		 }
      }
  }
 ```
