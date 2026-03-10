@@ -16,77 +16,81 @@ So create a new project and paste the code below into the Game1.cs file. Make su
 
 ## The Starting Code
 
+The Program.cs contents:
+
+```csharp
+using var game = new XNAseries4.Game1();
+game.Run();
+```
+
 The Game1.cs contents:
 
 ```csharp
- using System;
- using System.Collections.Generic;
- using Microsoft.Xna.Framework;
- using Microsoft.Xna.Framework.Audio;
- using Microsoft.Xna.Framework.Content;
- using Microsoft.Xna.Framework.GamerServices;
- using Microsoft.Xna.Framework.Graphics;
- using Microsoft.Xna.Framework.Input;
- using Microsoft.Xna.Framework.Net;
- using Microsoft.Xna.Framework.Storage;
- 
- namespace XNAseries4
- {
-     public struct VertexPositionNormalColored
-     {
-         public Vector3 Position;
-         public Color Color;
-         public Vector3 Normal;
- 
-         public static int SizeInBytes = 7 * 4;
-         public static VertexElement[] VertexElements = new VertexElement[]
-              {
-                  new VertexElement( 0, 0, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.Position, 0 ),
-                  new VertexElement( 0, sizeof(float) * 3, VertexElementFormat.Color, VertexElementMethod.Default, VertexElementUsage.Color, 0 ),
-                  new VertexElement( 0, sizeof(float) * 4, VertexElementFormat.Vector3, VertexElementMethod.Default, VertexElementUsage.Normal, 0 ),
-              };
-     }
- 
-     public class Game1 : Microsoft.Xna.Framework.Game
-     {
-         GraphicsDeviceManager graphics;
-         GraphicsDevice device;
- 
-         int terrainWidth;
-         int terrainLength;
-         float[,] heightData;
- 
-         VertexBuffer terrainVertexBuffer;
-         IndexBuffer terrainIndexBuffer;
-         VertexDeclaration terrainVertexDeclaration;
-                 
-         Effect effect;
-         Matrix viewMatrix;
-         Matrix projectionMatrix;
-         
-         public Game1()
-         {
-             graphics = new GraphicsDeviceManager(this);
-             Content.RootDirectory = "Content";
-         }
- 
-         protected override void Initialize()
-         {
-             graphics.PreferredBackBufferWidth = 500;
-             graphics.PreferredBackBufferHeight = 500;
-         
-             graphics.ApplyChanges();
-             Window.Title = "Riemer's XNA Tutorials -- Series 4";
-             
-             base.Initialize();
-         }
- 
-         protected override void LoadContent()
-         {
-             device = GraphicsDevice;
+using System;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
-            effect = Content.Load<Effect> ("Series4Effects");
-            viewMatrix = Matrix.CreateLookAt(new Vector3(130, 30, -50), new Vector3(0,0,-40), new Vector3(0, 1, 0));
+namespace XNAseries4
+{
+    public struct VertexPositionNormalColored
+    {
+        public Vector3 Position;
+        public Color Color;
+        public Vector3 Normal;
+
+        public static int SizeInBytes = 7 * 4;
+        public static VertexDeclaration VertexDeclaration = new VertexDeclaration(
+
+                  new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
+                  new VertexElement(sizeof(float) * 3, VertexElementFormat.Color, VertexElementUsage.Color, 0),
+                  new VertexElement(sizeof(float) * 4, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0)
+             );
+    }
+
+    public class Game1 : Microsoft.Xna.Framework.Game
+    {
+        GraphicsDeviceManager graphics;
+        GraphicsDevice device;
+
+        int terrainWidth;
+        int terrainLength;
+        float[,] heightData;
+
+        VertexBuffer terrainVertexBuffer;
+        IndexBuffer terrainIndexBuffer;
+        VertexDeclaration terrainVertexDeclaration;
+
+        Effect effect;
+        Matrix viewMatrix;
+        Matrix projectionMatrix;
+
+        public Game1()
+        {
+            graphics = new GraphicsDeviceManager(this);
+            graphics.GraphicsProfile = GraphicsProfile.HiDef;
+            Content.RootDirectory = "Content";
+        }
+
+        protected override void Initialize()
+        {
+            graphics.PreferredBackBufferWidth = 500;
+            graphics.PreferredBackBufferHeight = 500;
+            graphics.ApplyChanges();
+            Window.Title = "Riemer's XNA Tutorials -- Series 4";
+
+            base.Initialize();
+        }
+
+        protected override void LoadContent()
+        {
+            device = GraphicsDevice;
+
+            effect = Content.Load<Effect>("Series4Effects");
+            viewMatrix = Matrix.CreateLookAt(new Vector3(130, 30, -50), new Vector3(0, 0, -40), new Vector3(0, 1, 0));
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, device.Viewport.AspectRatio, 0.3f, 1000.0f);
 
             LoadVertices();
@@ -94,14 +98,14 @@ The Game1.cs contents:
 
         private void LoadVertices()
         {
-
-            Texture2D heightMap = Content.Load<Texture2D> ("heightmap");            LoadHeightData(heightMap);
+            Texture2D heightMap = Content.Load<Texture2D>("heightmap");
+            LoadHeightData(heightMap);
 
             VertexPositionNormalColored[] terrainVertices = SetUpTerrainVertices();
             int[] terrainIndices = SetUpTerrainIndices();
             terrainVertices = CalculateNormals(terrainVertices, terrainIndices);
             CopyToTerrainBuffers(terrainVertices, terrainIndices);
-            terrainVertexDeclaration = new VertexDeclaration(device, VertexPositionNormalColored.VertexElements);
+            terrainVertexDeclaration = VertexPositionNormalColored.VertexDeclaration;
         }
 
         private void LoadHeightData(Texture2D heightMap)
@@ -117,16 +121,24 @@ The Game1.cs contents:
 
             heightData = new float[terrainWidth, terrainLength];
             for (int x = 0; x < terrainWidth; x++)
+            {
                 for (int y = 0; y < terrainLength; y++)
                 {
                     heightData[x, y] = heightMapColors[x + y * terrainWidth].R;
-                    if (heightData[x, y] < minimumHeight) minimumHeight = heightData[x, y];
-                    if (heightData[x, y] > maximumHeight) maximumHeight = heightData[x, y];
+                    if (heightData[x, y] < minimumHeight)
+                        minimumHeight = heightData[x, y];
+                    if (heightData[x, y] > maximumHeight)
+                        maximumHeight = heightData[x, y];
                 }
+            }
 
             for (int x = 0; x < terrainWidth; x++)
+            {
                 for (int y = 0; y < terrainLength; y++)
+                {
                     heightData[x, y] = (heightData[x, y] - minimumHeight) / (maximumHeight - minimumHeight) * 30.0f;
+                }
+            }
         }
 
         private VertexPositionNormalColored[] SetUpTerrainVertices()
@@ -207,12 +219,12 @@ The Game1.cs contents:
 
         private void CopyToTerrainBuffers(VertexPositionNormalColored[] vertices, int[] indices)
         {
-            terrainVertexBuffer = new VertexBuffer(device, vertices.Length * VertexPositionNormalColored.SizeInBytes, BufferUsage.WriteOnly);
+            terrainVertexBuffer = new VertexBuffer(device, VertexPositionNormalColored.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
             terrainVertexBuffer.SetData(vertices);
 
             terrainIndexBuffer = new IndexBuffer(device, typeof(int), indices.Length, BufferUsage.WriteOnly);
             terrainIndexBuffer.SetData(indices);
-        }        
+        }
 
         protected override void UnloadContent()
         {
@@ -220,18 +232,17 @@ The Game1.cs contents:
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
-                this.Exit();
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+                Exit();
 
             base.Update(gameTime);
-        }        
+        }
 
         protected override void Draw(GameTime gameTime)
         {
             float time = (float)gameTime.TotalGameTime.TotalMilliseconds / 100.0f;
-            device.RenderState.CullMode = CullMode.None;
-            
-            device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1.0f, 0);            
+            device.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
+            device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1.0f, 0);
             DrawTerrain(viewMatrix);
 
             base.Draw(gameTime);
@@ -249,22 +260,13 @@ The Game1.cs contents:
             effect.Parameters["xAmbient"].SetValue(0.4f);
             effect.Parameters["xLightDirection"].SetValue(new Vector3(-0.5f, -1, -0.5f));
 
-            effect.Begin();
             foreach (EffectPass pass in effect.CurrentTechnique.Passes)
             {
-                pass.Begin();
-
-                device.Vertices[0].SetSource(terrainVertexBuffer, 0, VertexPositionNormalColored.SizeInBytes);
+                pass.Apply();
                 device.Indices = terrainIndexBuffer;
-                device.VertexDeclaration = terrainVertexDeclaration;
-
-                int noVertices = terrainVertexBuffer.SizeInBytes / VertexPositionNormalColored.SizeInBytes;
-                int noTriangles = terrainIndexBuffer.SizeInBytes / sizeof(int)/3;
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, noVertices, 0, noTriangles);
-
-                pass.End();
+                device.SetVertexBuffer(terrainVertexBuffer);
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, terrainIndexBuffer.IndexCount / 3);
             }
-            effect.End();
         }
     }
 }
@@ -283,6 +285,15 @@ And the contents of the Series4Effects.fx file:
 //--                                                --
 //----------------------------------------------------
 
+#if OPENGL
+#define SV_POSITION POSITION
+#define VS_SHADERMODEL vs_3_0
+#define PS_SHADERMODEL ps_3_0
+#else
+#define VS_SHADERMODEL vs_4_0_level_9_3
+#define PS_SHADERMODEL ps_4_0_level_9_3
+#endif
+
 //------- Constants --------
 float4x4 xView;
 float4x4 xProjection;
@@ -295,13 +306,21 @@ bool xEnableLighting;
 
 Texture xTexture;
 
-sampler TextureSampler = sampler_state { texture = <xTexture> ; magfilter = LINEAR; minfilter = LINEAR; mipfilter=LINEAR; AddressU = mirror; AddressV = mirror;};
+sampler TextureSampler = sampler_state
+{
+    texture = <xTexture>;
+    magfilter = LINEAR;
+    minfilter = LINEAR;
+    mipfilter = LINEAR;
+    AddressU = mirror;
+    AddressV = mirror;
+};
 //------- Technique: Colored --------
 struct ColVertexToPixel
 {
-    float4 Position     : POSITION;    
-    float4 Color        : COLOR0;
-    float LightingFactor: TEXCOORD0;
+    float4 Position : POSITION;
+    float4 Color : COLOR0;
+    float LightingFactor : TEXCOORD0;
 };
 
 struct ColPixelToFrame
@@ -309,29 +328,29 @@ struct ColPixelToFrame
     float4 Color : COLOR0;
 };
 
-ColVertexToPixel ColoredVS( float4 inPos : POSITION, float4 inColor: COLOR, float3 inNormal: NORMAL)
-{    
-    ColVertexToPixel Output = (ColVertexToPixel)0;
-    float4x4 preViewProjection = mul (xView, xProjection);
-    float4x4 preWorldViewProjection = mul (xWorld, preViewProjection);
+ColVertexToPixel ColoredVS(float4 inPos : POSITION, float4 inColor : COLOR, float3 inNormal : NORMAL)
+{
+    ColVertexToPixel Output = (ColVertexToPixel) 0;
+    float4x4 preViewProjection = mul(xView, xProjection);
+    float4x4 preWorldViewProjection = mul(xWorld, preViewProjection);
     
     Output.Position = mul(inPos, preWorldViewProjection);
     Output.Color = inColor;
     
-    float3 Normal = normalize(mul(normalize(inNormal), xWorld));    
+    float3 Normal = normalize(mul(normalize(inNormal), xWorld));
     Output.LightingFactor = 1;
     if (xEnableLighting)
         Output.LightingFactor = saturate(dot(Normal, -xLightDirection));
     
-    return Output;    
+    return Output;
 }
 
 ColPixelToFrame ColoredPS(ColVertexToPixel PSIn)
 {
-    ColPixelToFrame Output = (ColPixelToFrame)0;        
+    ColPixelToFrame Output = (ColPixelToFrame) 0;
     
     Output.Color = PSIn.Color;
-    Output.Color.rgb *= saturate(PSIn.LightingFactor + xAmbient);    
+    Output.Color.rgb *= saturate(PSIn.LightingFactor + xAmbient);
     
     return Output;
 }
@@ -340,18 +359,18 @@ technique Colored
 {
     pass Pass0
     {
-        VertexShader = compile vs_1_1 ColoredVS();
-        PixelShader = compile ps_1_1 ColoredPS();
+        VertexShader = compile VS_SHADERMODEL ColoredVS();
+        PixelShader = compile PS_SHADERMODEL ColoredPS();
     }
 }
 
 //------- Technique: Textured --------
 struct TexVertexToPixel
 {
-    float4 Position     : POSITION;    
-    float4 Color        : COLOR0;
-    float LightingFactor: TEXCOORD0;
-    float2 TextureCoords: TEXCOORD1;
+    float4 Position : POSITION;
+    float4 Color : COLOR0;
+    float LightingFactor : TEXCOORD0;
+    float2 TextureCoords : TEXCOORD1;
 };
 
 struct TexPixelToFrame
@@ -359,26 +378,26 @@ struct TexPixelToFrame
     float4 Color : COLOR0;
 };
 
-TexVertexToPixel TexturedVS( float4 inPos : POSITION, float3 inNormal: NORMAL, float2 inTexCoords: TEXCOORD0)
-{    
-    TexVertexToPixel Output = (TexVertexToPixel)0;
-    float4x4 preViewProjection = mul (xView, xProjection);
-    float4x4 preWorldViewProjection = mul (xWorld, preViewProjection);
+TexVertexToPixel TexturedVS(float4 inPos : POSITION, float3 inNormal : NORMAL, float2 inTexCoords : TEXCOORD0)
+{
+    TexVertexToPixel Output = (TexVertexToPixel) 0;
+    float4x4 preViewProjection = mul(xView, xProjection);
+    float4x4 preWorldViewProjection = mul(xWorld, preViewProjection);
     
-    Output.Position = mul(inPos, preWorldViewProjection);    
+    Output.Position = mul(inPos, preWorldViewProjection);
     Output.TextureCoords = inTexCoords;
     
-    float3 Normal = normalize(mul(normalize(inNormal), xWorld));    
+    float3 Normal = normalize(mul(normalize(inNormal), xWorld));
     Output.LightingFactor = 1;
     if (xEnableLighting)
         Output.LightingFactor = saturate(dot(Normal, -xLightDirection));
     
-    return Output;    
+    return Output;
 }
 
 TexPixelToFrame TexturedPS(TexVertexToPixel PSIn)
 {
-    TexPixelToFrame Output = (TexPixelToFrame)0;        
+    TexPixelToFrame Output = (TexPixelToFrame) 0;
     
     Output.Color = tex2D(TextureSampler, PSIn.TextureCoords);
     Output.Color.rgb *= saturate(PSIn.LightingFactor + xAmbient);
@@ -390,8 +409,8 @@ technique Textured
 {
     pass Pass0
     {
-        VertexShader = compile vs_1_1 TexturedVS();
-        PixelShader = compile ps_1_1 TexturedPS();
+        VertexShader = compile VS_SHADERMODEL TexturedVS();
+        PixelShader = compile PS_SHADERMODEL TexturedPS();
     }
 }
 ```
